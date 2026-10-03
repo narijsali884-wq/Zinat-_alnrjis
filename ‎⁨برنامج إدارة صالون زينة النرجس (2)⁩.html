@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-i18n="page-title">صالون زينة النرجس - لوحة التحكم الشاملة</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Generator & Scanner -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Firebase SDK UMD Global Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #fff5f7;
+            color: #4a2e35;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .pink-gradient {
+            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+        }
+        .luxury-card-gradient {
+            background: linear-gradient(135deg, #db2777 0%, #9d174d 100%);
+        }
+        .dashboard-tile-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #fff1f5 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 30px -5px rgba(219, 39, 119, 0.1), 0 8px 10px -6px rgba(219, 39, 119, 0.05);
+        }
+        .tile-shadow {
+            box-shadow: 0 12px 35px -8px rgba(219, 39, 119, 0.16);
+            transition: all 0.25s ease;
+        }
+        .tile-shadow:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body class="bg-[#fff5f7] min-h-screen pb-24">
+
+    <header class="pink-gradient text-white shadow-lg sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2.5 space-x-reverse">
+                <button onclick="goHome()" id="home-back-btn" class="hidden w-9 h-9 rounded-2xl bg-white/20 hover:bg-white/30 flex items-center justify-center font-bold text-base transition">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <div class="w-10 h-10 rounded-2xl bg-white text-pink-600 flex items-center justify-center font-bold text-lg shadow-md">
+                    <i class="fa-solid fa-spa"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-sm sm:text-base leading-tight tracking-wide" data-i18n="salon-title">صالون زينة النرجس</h1>
+                    <div class="flex items-center gap-2">
+                        <a href="https://wa.me/+96872696405" target="_blank" class="text-[11px] text-pink-100 font-medium hover:underline flex items-center gap-1">
+                            <i class="fa-brands fa-whatsapp text-emerald-300"></i> +968 7269 6405
+                        </a>
+                        <span id="sync-status" class="text-[9px] bg-emerald-500/80 text-white px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-signal text-[8px] animate-pulse"></i> <span data-i18n="online-sync">أونلاين سحابي</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <button onclick="toggleLanguage()" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-globe"></i> <span id="lang-label">English</span>
+                </button>
+                <button onclick="openInstallInstructions()" class="bg-white/25 hover:bg-white/35 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-mobile-screen-button text-sm"></i> <span data-i18n="btn-install">تثبيت</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-3 sm:px-4 mt-5">
+
+        <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-300 max-w-sm w-full px-4">
+            <div id="toast-content" class="bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 space-x-reverse text-xs sm:text-sm font-semibold">
+                <i id="toast-icon" class="fa-solid fa-circle-check text-green-400 text-base"></i>
+                <span id="toast-message">تمت العملية بنجاح!</span>
+            </div>
+        </div>
+
+        <!-- HOMEPAGE DASHBOARD TILES -->
+        <div id="tab-home" class="tab-content space-y-6">
+            <div class="bg-white p-5 sm:p-7 rounded-[2rem] card-shadow border border-pink-100 text-center relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-36 h-36 bg-pink-100/50 rounded-full blur-2xl pointer-events-none"></div>
+                <h2 class="text-lg sm:text-2xl font-black text-gray-800 mb-1.5" data-i18n="home-welcome">مرحباً بكِ في نظام إدارة صالون زينة النرجس 🌸</h2>
+                <p class="text-xs sm:text-sm text-gray-500 max-w-xl mx-auto" data-i18n="home-desc">اختر القسم المطلوب من الأيقونات الكبيرة أدناه للتحكم بجميع أقسام الصالون والولاء والحجوزات بسلاسة تامة.</p>
+            </div>
+
+            <!-- Big Interactive Grid Tiles -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                <!-- Tile 1: Customers -->
+                <button onclick="switchTab('customers')" class="dashboard-tile-gradient p-6 sm:p-8 rounded-[2rem] tile-shadow border border-pink-200/80 flex flex-col items-center justify-center text-center group hover:border-pink-400 transition">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-pink-600 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-lg mb-3.5 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <h3 class="font-black text-gray-800 text-sm sm:text-lg mb-1" data-i18n="tab-customers">الزبائن والولاء</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-500" data-i18n="tile-cust-desc">بطاقات ولاء رقمية وأختام</p>
+                </button>
+
+                <!-- Tile 2: Bookings -->
+                <button onclick="switchTab('bookings')" class="dashboard-tile-gradient p-6 sm:p-8 rounded-[2rem] tile-shadow border border-pink-200/80 flex flex-col items-center justify-center text-center group hover:border-pink-400 transition">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-rose-600 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-lg mb-3.5 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <h3 class="font-black text-gray-800 text-sm sm:text-lg mb-1" data-i18n="tab-bookings">الحجوزات والمواعيد</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-500" data-i18n="tile-book-desc">تنبيهات وتذاكر واتساب</p>
+                </button>
+
+                <!-- Tile 3: Accounts -->
+                <button onclick="switchTab('accounts')" class="dashboard-tile-gradient p-6 sm:p-8 rounded-[2rem] tile-shadow border border-pink-200/80 flex flex-col items-center justify-center text-center group hover:border-pink-400 transition">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-amber-500 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-lg mb-3.5 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                    <h3 class="font-black text-gray-800 text-sm sm:text-lg mb-1" data-i18n="tab-accounts">الحسابات والفواتير</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-500" data-i18n="tile-acc-desc">مبيعات شهرية وفواتير</p>
+                </button>
+
+                <!-- Tile 4: Services -->
+                <button onclick="switchTab('services')" class="dashboard-tile-gradient p-6 sm:p-8 rounded-[2rem] tile-shadow border border-pink-200/80 flex flex-col items-center justify-center text-center group hover:border-pink-400 transition">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-purple-600 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-lg mb-3.5 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-scissors"></i>
+                    </div>
+                    <h3 class="font-black text-gray-800 text-sm sm:text-lg mb-1" data-i18n="tab-services">الأسعار والتخفيضات</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-500" data-i18n="tile-serv-desc">قائمة الخدمات والخصومات</p>
+                </button>
+
+                <!-- Tile 5: Scanner -->
+                <button onclick="switchTab('scanner')" class="dashboard-tile-gradient p-6 sm:p-8 rounded-[2rem] tile-shadow border border-pink-200/80 flex flex-col items-center justify-center text-center group hover:border-pink-400 transition">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-emerald-600 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-lg mb-3.5 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <h3 class="font-black text-gray-800 text-sm sm:text-lg mb-1" data-i18n="tab-scanner">ماسح البطاقات</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-500" data-i18n="tile-scan-desc">مسح QR للولاء الفوري</p>
+                </button>
+
+                <!-- Tile 6: Reports -->
+                <button onclick="switchTab('stats')" class="dashboard-tile-gradient p-6 sm:p-8 rounded-[2rem] tile-shadow border border-pink-200/80 flex flex-col items-center justify-center text-center group hover:border-pink-400 transition">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-blue-600 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-lg mb-3.5 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <h3 class="font-black text-gray-800 text-sm sm:text-lg mb-1" data-i18n="tab-stats">التقارير والنشاط</h3>
+                    <p class="text-[11px] sm:text-xs text-gray-500" data-i18n="tile-stats-desc">إحصائيات وسجل الحركات</p>
+                </button>
+            </div>
+        </div>
+
+        <div id="tab-customers" class="tab-content hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 sm:p-6 rounded-3xl card-shadow border border-pink-100">
+                <div>
+                    <h2 class="text-base sm:text-xl font-black text-gray-800" data-i18n="cust-header">إدارة الزبائن وبطاقات الولاء الرقمية</h2>
+                    <p class="text-[11px] sm:text-xs text-gray-500 mt-1" data-i18n="cust-subheader">كل 4 خدمات مدفوعة (تزيد قيمة الخدمة عن 5 ريال) تمنح الزبونة خدمة مجانية تلقائياً</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <input type="text" id="search-customer" data-i18n-placeholder="search-placeholder" placeholder="ابحث باسم الزبون أو الهاتف..." oninput="filterCustomers()" class="px-3.5 py-2 text-xs sm:text-sm border border-pink-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-pink-400 w-full sm:w-60 bg-pink-50/30">
+                    <button onclick="openAddCustomerModal()" class="pink-gradient text-white px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold shadow-md hover:opacity-95 transition whitespace-nowrap flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus"></i> <span data-i18n="btn-add-cust">إضافة زبون</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="customers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+
+        <div id="tab-bookings" class="tab-content hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 sm:p-6 rounded-3xl card-shadow border border-pink-100">
+                <div>
+                    <h2 class="text-base sm:text-xl font-black text-gray-800" data-i18n="book-header">جدولة الحجوزات والمواعيد والإنذارات</h2>
+                    <p class="text-[11px] sm:text-xs text-gray-500 mt-1" data-i18n="book-subheader">تنبيهات ملونة ذكية للمواعيد (أخضر: 3-5 أيام، أصفر: يومين، أحمر: قبل يوم) مع إجمالي المبالغ المتوقعة</p>
+                </div>
+                <button onclick="openAddBookingModal()" class="pink-gradient text-white px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold shadow-md hover:opacity-95 transition flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-plus"></i> <span data-i18n="btn-add-booking">حجز موعد جديد</span>
+                </button>
+            </div>
+
+            <!-- Search and Filter Bar for Bookings -->
+            <div class="bg-white p-4 rounded-3xl card-shadow border border-pink-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="relative w-full sm:w-64">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-pink-500">
+                            <i class="fa-solid fa-search text-xs"></i>
+                        </span>
+                        <input type="text" id="search-booking-input" data-i18n-placeholder="search-booking-placeholder" placeholder="ابحث باسم الزبونة في الحجوزات..." oninput="filterBookings()" class="w-full pr-9 pl-3.5 py-2 text-xs border border-pink-200 rounded-xl focus:outline-none bg-pink-50/20 font-medium text-gray-800">
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <label class="text-xs font-bold text-gray-700 whitespace-nowrap"><i class="fa-solid fa-calendar-day text-pink-600 ml-1"></i> <span data-i18n="filter-date-label">تصفية بالتاريخ:</span></label>
+                    <input type="date" id="filter-date-picker" onchange="filterBookings()" class="px-3 py-2 text-xs border border-pink-200 rounded-xl focus:outline-none bg-pink-50/30 font-bold text-pink-800">
+                    <button onclick="clearBookingFilter()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-xl text-xs font-bold transition" data-i18n="btn-clear-filter">إلغاء التصفية</button>
+                </div>
+            </div>
+
+            <div id="booking-alerts-container" class="space-y-3">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <div id="bookings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+
+        <div id="tab-accounts" class="tab-content hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 sm:p-6 rounded-3xl card-shadow border border-pink-100">
+                <div>
+                    <h2 class="text-base sm:text-xl font-black text-gray-800" data-i18n="acc-header">حسابات الزبائن والفواتير الشهرية والتاريخية</h2>
+                    <p class="text-[11px] sm:text-xs text-gray-500 mt-1" data-i18n="acc-subheader">الزبائن مضافون تلقائياً أو يمكنك إضافة حسابات يدوية وحذفها والتعديل مباشرة</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="openAddAccountModal()" class="pink-gradient text-white px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold shadow-md hover:opacity-95 transition whitespace-nowrap flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus-circle"></i> <span data-i18n="btn-add-account">إضافة حساب يدوي</span>
+                    </button>
+                    <div class="bg-pink-50 border border-pink-200 px-4 py-2 rounded-2xl text-xs font-bold text-pink-800 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-pink-600 text-sm"></i>
+                        <span id="monthly-total-summary">إجمالي المبيعات هذا الشهر: 0 ريال</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Performance Summary Card -->
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-4 sm:p-5 rounded-3xl card-shadow flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-black text-sm sm:text-base flex items-center gap-2">
+                        <i class="fa-solid fa-user-tie text-amber-300"></i> <span data-i18n="staff-perf-title">تقرير أداء الموظفين وإجمالي المبيعات (هذا الشهر)</span>
+                    </h3>
+                    <p class="text-[11px] text-indigo-100 mt-0.5" data-i18n="staff-perf-desc">مجموع إيرادات وعدد خدمات كل موظفة في الصالون خلال الشهر الحالي بناءً على الحسابات المسجلة</p>
+                </div>
+                <div id="staff-performance-summary" class="flex items-center gap-2 flex-wrap justify-end">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-3xl card-shadow border border-pink-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <label class="text-xs font-bold text-gray-700 whitespace-nowrap"><i class="fa-solid fa-calendar-days text-pink-600 ml-1"></i> <span data-i18n="report-month-label">تقرير شهر:</span></label>
+                    <input type="month" id="report-month-picker" onchange="renderAccounts()" class="px-3 py-2 text-xs border border-pink-200 rounded-xl focus:outline-none bg-pink-50/30 font-bold text-pink-800">
+                </div>
+                <div id="selected-month-sales-badge" class="bg-pink-600 text-white px-4 py-2 rounded-2xl text-xs font-black shadow-sm">
+                    إجمالي مبيعات الشهر المحدد: 0 ريال عماني
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl card-shadow border border-pink-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-pink-100/70 text-pink-900 font-black border-b border-pink-200">
+                                <th class="p-3.5" data-i18n="th-customer">الزبونة</th>
+                                <th class="p-3.5" data-i18n="th-phone">رقم الهاتف</th>
+                                <th class="p-3.5" data-i18n="th-staff">الموظفة المسؤولة</th>
+                                <th class="p-3.5" data-i18n="th-method">طريقة الدفع</th>
+                                <th class="p-3.5" data-i18n="th-amount">المبلغ المدفوع (ريال)</th>
+                                <th class="p-3.5" data-i18n="th-extra">منتجات عناية إضافية وتكلفة</th>
+                                <th class="p-3.5 text-center" data-i18n="th-total">الإجمالي</th>
+                                <th class="p-3.5 text-center" data-i18n="th-actions">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-table-body" class="divide-y divide-pink-100 text-gray-700 font-medium">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-services" class="tab-content hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 sm:p-6 rounded-3xl card-shadow border border-pink-100">
+                <div>
+                    <h2 class="text-base sm:text-xl font-black text-gray-800" data-i18n="serv-header">قائمة أسعار صالون زينة النرجس والتخفيضات</h2>
+                    <p class="text-[11px] sm:text-xs text-gray-500 mt-1" data-i18n="serv-subheader">تعديل الأسعار وإضافة التخفيضات بكل سلاسة لتحديث الفاتورة والحجوزات فوراً</p>
+                </div>
+                <button onclick="openAddServiceModal()" class="pink-gradient text-white px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold shadow-md hover:opacity-95 transition flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-plus"></i> <span data-i18n="btn-add-service">إضافة خدمة</span>
+                </button>
+            </div>
+
+            <!-- Global Discount Controller Box -->
+            <div class="bg-gradient-to-r from-pink-500 to-rose-600 text-white p-4 sm:p-6 rounded-3xl card-shadow flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-black text-sm sm:text-base flex items-center gap-2">
+                        <i class="fa-solid fa-percent text-amber-300"></i> <span data-i18n="discount-title">تفعيل نسبة تخفيض عامة لجميع الخدمات</span>
+                    </h3>
+                    <p class="text-[11px] text-pink-100 mt-0.5" data-i18n="discount-desc">حدد نسبة التخفيض وفترة سريانه ليتم تطبيق السعر الجديد على كافة الخدمات والحجوزات فوراً، أو قم بإلغائه في أي وقت</p>
+                </div>
+                <div class="flex items-center gap-2.5 w-full sm:w-auto flex-wrap">
+                    <div class="flex items-center bg-white/15 backdrop-blur rounded-2xl px-3 py-1.5 border border-white/20">
+                        <span class="text-xs font-bold ml-1.5" data-i18n="discount-rate-label">نسبة الخصم:</span>
+                        <input type="number" id="global-discount-percent" value="0" min="0" max="100" class="w-16 px-2 py-1 bg-white text-gray-900 rounded-xl font-bold text-xs text-center focus:outline-none" placeholder="0">
+                        <span class="text-xs font-bold mr-1">%</span>
+                    </div>
+                    <div class="flex items-center bg-white/15 backdrop-blur rounded-2xl px-3 py-1.5 border border-white/20">
+                        <span class="text-xs font-bold ml-1.5" data-i18n="discount-date-label">إلى تاريخ:</span>
+                        <input type="date" id="global-discount-date" class="px-2 py-1 bg-white text-gray-900 rounded-xl font-bold text-xs text-center focus:outline-none">
+                    </div>
+                    <button onclick="applyGlobalDiscount()" class="bg-amber-400 hover:bg-amber-500 text-rose-950 px-3.5 py-2 rounded-2xl font-black text-xs shadow transition whitespace-nowrap flex items-center gap-1">
+                        <i class="fa-solid fa-check"></i> <span data-i18n="btn-apply-discount">تطبيق التخفيض</span>
+                    </button>
+                    <button onclick="cancelGlobalDiscount()" class="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-2xl font-black text-xs shadow transition whitespace-nowrap flex items-center gap-1 border border-white/30" title="إلغاء التخفيض فورياً">
+                        <i class="fa-solid fa-rotate-left"></i> <span data-i18n="btn-cancel-discount">إلغاء التخفيض</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+
+        <div id="tab-scanner" class="tab-content hidden space-y-4">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl card-shadow border border-pink-100 max-w-lg mx-auto text-center">
+                <div class="w-14 h-14 bg-pink-100 text-pink-600 rounded-3xl mx-auto flex items-center justify-center text-xl mb-3 shadow-inner">
+                    <i class="fa-solid fa-qrcode"></i>
+                </div>
+                <h2 class="text-base sm:text-xl font-black text-gray-800 mb-1" data-i18n="scanner-header">ماسح بطاقات الولاء الإلكترونية</h2>
+                <p class="text-[11px] sm:text-xs text-gray-500 mb-5" data-i18n="scanner-subheader">قم بمَسح رمز الاستجابة السريع (QR Code) الخاص ببطاقة الزبونة لتسجيل نقطة أو صرف خدمة مجانية فوراً</p>
+                
+                <div id="reader" class="w-full rounded-2xl overflow-hidden border-2 border-pink-200 bg-pink-50/20 mb-5 shadow-sm min-h-[260px]"></div>
+                
+                <div class="flex gap-2 justify-center flex-wrap">
+                    <button onclick="startScanner()" class="pink-gradient text-white px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm shadow-md hover:opacity-95 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-camera"></i> <span data-i18n="btn-start-camera">تشغيل الكاميرا</span>
+                    </button>
+                    <button onclick="stopScanner()" class="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-2xl font-bold text-xs sm:text-sm shadow-sm hover:bg-gray-200 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-stop"></i> <span data-i18n="btn-stop-camera">إيقاف الكاميرا</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-stats" class="tab-content hidden space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-3xl card-shadow border border-pink-100 flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-semibold text-gray-400" data-i18n="stat-cust">إجمالي الزبائن المسجلين</p>
+                        <h3 id="stat-total-customers" class="text-2xl font-black text-gray-800 mt-0.5">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-3xl card-shadow border border-pink-100 flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-gift"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-semibold text-gray-400" data-i18n="stat-free">الخدمات المجانية المصروفة</p>
+                        <h3 id="stat-free-services" class="text-2xl font-black text-gray-800 mt-0.5">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-3xl card-shadow border border-pink-100 flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-semibold text-gray-400" data-i18n="stat-book">الحجوزات والمواعيد النشطة</p>
+                        <h3 id="stat-total-bookings" class="text-2xl font-black text-gray-800 mt-0.5">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl card-shadow border border-pink-100">
+                <h3 class="font-bold text-sm sm:text-base text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-pink-600"></i> <span data-i18n="logs-header">سجل حركات ونشاطات الصالون</span>
+                </h3>
+                <div id="logs-list" class="space-y-2.5">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 card-shadow border border-pink-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-black text-gray-800" data-i18n="modal-cust-title">إضافة زبونة جديدة للولاء</h3>
+                <button onclick="closeModal('customer-modal')" class="text-gray-400 hover:text-gray-600 text-base w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleSaveCustomer(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-name">اسم الزبونة</label>
+                    <input type="text" id="cust-name" required class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50/20" data-i18n-placeholder="placeholder-cust-name" placeholder="مثال: فاطمة البلوشي">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-phone">رقم الهاتف (سلطنة عمان)</label>
+                    <div class="flex items-center rounded-2xl border border-pink-200 bg-pink-50/20 overflow-hidden focus-within:ring-2 focus-within:ring-pink-400">
+                        <span class="bg-pink-100 text-pink-700 font-bold px-3 py-2.5 text-xs border-l border-pink-200 flex items-center gap-1">
+                            🇴🇲 +968
+                        </span>
+                        <input type="tel" id="cust-phone" required maxlength="8" class="w-full px-3 py-2.5 text-xs sm:text-sm focus:outline-none bg-transparent" placeholder="9xxxxxxx">
+                    </div>
+                </div>
+                <div class="pt-1">
+                    <button type="submit" class="w-full pink-gradient text-white py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md hover:opacity-95 transition" data-i18n="btn-save-cust">حفظ وإصدار بطاقة الولاء الرقمية</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 card-shadow border border-pink-100 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 sticky top-0 bg-white py-1 z-10 border-b border-gray-100">
+                <h3 class="text-base font-black text-gray-800" data-i18n="modal-booking-title">حجز موعد جديد في الصالون</h3>
+                <button onclick="closeModal('booking-modal')" class="text-gray-400 hover:text-gray-600 text-base w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleSaveBooking(event)" class="space-y-3.5 pt-1">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-name">اسم الزبونة</label>
+                    <input type="text" id="book-name" required class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50/20" data-i18n-placeholder="placeholder-cust-name" placeholder="اسم الزبونة الكريمة">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-whatsapp">رقم الواتساب (سلطنة عمان)</label>
+                    <div class="flex items-center rounded-2xl border border-pink-200 bg-pink-50/20 overflow-hidden focus-within:ring-2 focus-within:ring-pink-400">
+                        <span class="bg-pink-100 text-pink-700 font-bold px-3 py-2.5 text-xs border-l border-pink-200 flex items-center gap-1">
+                            🇴🇲 +968
+                        </span>
+                        <input type="tel" id="book-phone" required maxlength="8" class="w-full px-3 py-2.5 text-xs sm:text-sm focus:outline-none bg-transparent" placeholder="9xxxxxxx">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-bold text-gray-600" data-i18n="label-select-services">اختر الخدمات المطلوبة وحساب الإجمالي</label>
+                        <span id="booking-total-price" class="text-xs font-black text-pink-700 bg-pink-100 px-2 py-0.5 rounded-lg">الإجمالي: 0 ريال</span>
+                    </div>
+                    <div id="booking-services-checkboxes" class="space-y-1.5 max-h-40 overflow-y-auto p-2.5 rounded-2xl border border-pink-200 bg-pink-50/10">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-date">التاريخ</label>
+                        <input type="date" id="book-date" required class="w-full px-2.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50/20">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-time">الوقت</label>
+                        <input type="time" id="book-time" required class="w-full px-2.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50/20">
+                    </div>
+                </div>
+                <div class="pt-1">
+                    <button type="submit" class="w-full pink-gradient text-white py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md hover:opacity-95 transition" data-i18n="btn-confirm-booking">تأكيد الحجز وإرسال التذكرة عبر الواتساب</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Account Modal -->
+    <div id="account-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 card-shadow border border-pink-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-black text-gray-800" data-i18n="modal-acc-title">إضافة حساب زبونة يدوي للجدول</h3>
+                <button onclick="closeModal('account-modal')" class="text-gray-400 hover:text-gray-600 text-base w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleSaveManualAccount(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-name">اسم الزبونة</label>
+                    <input type="text" id="acc-name" required class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50/20" data-i18n-placeholder="placeholder-cust-name" placeholder="اسم الزبونة الكريمة">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-phone">رقم الهاتف</label>
+                    <input type="tel" id="acc-phone" required class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none bg-pink-50/20" placeholder="+968xxxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-staff-name">الموظفة المسؤولة</label>
+                    <input type="text" id="acc-staff" class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs bg-pink-50/20 font-bold text-indigo-700" placeholder="مثال: مريم أو عائشة">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-payment-method">طريقة الدفع</label>
+                        <select id="acc-method" class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs bg-white font-semibold text-pink-700">
+                            <option value="كاش" data-i18n="opt-cash">كاش</option>
+                            <option value="تحويل بنكي" data-i18n="opt-transfer">تحويل بنكي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-amount">المبلغ (ريال)</label>
+                        <input type="number" id="acc-amount" required value="0" class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs font-bold text-pink-700 bg-pink-50/20">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-extra-products">منتجات عناية إضافية وتكلفة</label>
+                    <input type="text" id="acc-extra" class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs bg-pink-50/20" placeholder="مثال: كريم مرطب (5 ريال)">
+                </div>
+                <div class="pt-1">
+                    <button type="submit" class="w-full pink-gradient text-white py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md" data-i18n="btn-save-acc">إضافة السجل للجدول</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Card Modal -->
+    <div id="card-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 sm:p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-md rounded-[2rem] p-5 sm:p-6 card-shadow border border-pink-100 relative overflow-hidden max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('card-modal')" class="absolute top-4 left-4 text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center transition z-10"><i class="fa-solid fa-xmark text-sm"></i></button>
+            
+            <div class="luxury-card-gradient text-white p-5 rounded-3xl mb-4 shadow-xl relative overflow-hidden">
+                <div class="absolute -left-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="bg-white/20 text-pink-100 text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm" data-i18n="card-badge">بطاقة ولاء رقمية معتمدة</span>
+                        <h4 class="font-black text-lg mt-1.5 tracking-wide" data-i18n="salon-title">صالون زينة النرجس 🌸</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-base">
+                        <i class="fa-solid fa-crown text-amber-300"></i>
+                    </div>
+                </div>
+
+                <div class="bg-black/15 backdrop-blur-md p-3 rounded-2xl border border-white/10 flex justify-between items-center mb-2.5">
+                    <div>
+                        <p id="modal-cust-name" class="font-black text-sm text-white">اسم الزبونة</p>
+                        <p id="modal-cust-phone" class="text-[11px] text-pink-200 font-mono mt-0.5" dir="ltr">96890000000+</p>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-[9px] text-pink-200 block" data-i18n="card-free-label">الخدمات المجانية</span>
+                        <span id="modal-cust-free-badge" class="font-black text-emerald-300 text-xs">0 هدية</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-[11px] text-pink-100 font-bold mb-1.5">
+                        <span data-i18n="card-progress">تقدم رصيد البطاقة (كل 4 خدمات = خدمة مجانية):</span>
+                        <span id="modal-stamps-text" class="text-amber-300 font-black">0 / 4</span>
+                    </div>
+                    <div id="modal-stamps-container" class="grid grid-cols-4 gap-2">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 bg-pink-50/50 p-3.5 rounded-2xl border border-pink-100 mb-4">
+                <div id="qrcode" class="p-1.5 bg-white border border-pink-200 rounded-xl shadow-sm shrink-0 flex items-center justify-center"></div>
+                <div class="text-right w-full">
+                    <p class="text-xs font-bold text-gray-800 mb-0.5"><i class="fa-solid fa-qrcode text-pink-600 ml-1"></i> <span data-i18n="qr-scan-title">مسح البطاقة السريع</span></p>
+                    <p class="text-[10px] text-gray-500 leading-tight" data-i18n="qr-scan-desc">اعرض هذا الرمز لكاشير الصالون لتحديث الأختام فوراً.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-2.5">
+                <button onclick="addPaidServiceToCurrent()" class="pink-gradient text-white py-3 rounded-2xl font-bold text-[11px] shadow-md hover:opacity-95 transition flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-plus-circle text-xs"></i> <span data-i18n="btn-add-stamp">تسجيل خدمة مدفوعة (+1)</span>
+                </button>
+                <button onclick="redeemFreeServiceToCurrent()" id="redeem-btn" class="bg-emerald-600 text-white py-3 rounded-2xl font-bold text-[11px] shadow hover:bg-emerald-700 transition opacity-50 cursor-not-allowed flex items-center justify-center gap-1" disabled>
+                    <i class="fa-solid fa-gift text-xs"></i> <span data-i18n="btn-redeem">صرف خدمة مجانية 🎁</span>
+                </button>
+            </div>
+            
+            <button onclick="sendWhatsAppCardMessage()" class="w-full bg-[#25D366] text-white py-3 rounded-2xl font-bold text-xs shadow hover:opacity-90 transition flex items-center justify-center gap-1.5">
+                <i class="fa-brands fa-whatsapp text-sm"></i> <span data-i18n="btn-send-whatsapp">إرسال تفاصيل بطاقة الولاء والكيو آر كود عبر الواتساب</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Service Modal -->
+    <div id="service-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 card-shadow border border-pink-100">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="service-modal-title" class="text-base font-black text-gray-800" data-i18n="modal-serv-title">إضافة أو تعديل خدمة وسعر</h3>
+                <button onclick="closeModal('service-modal')" class="text-gray-400 hover:text-gray-600 text-base w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleSaveService(event)" class="space-y-3.5">
+                <input type="hidden" id="serv-id">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-serv-name">اسم الخدمة</label>
+                    <input type="text" id="serv-name" required class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50/20" placeholder="مثال: جلسة عناية ملكية">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1" data-i18n="label-serv-price">السعر أو تفاصيل التكلفة / التخفيض</label>
+                    <input type="text" id="serv-price" required class="w-full px-3.5 py-2.5 rounded-2xl border border-pink-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-pink-50/20" placeholder="مثال: 15 ريال">
+                </div>
+                <div class="pt-1">
+                    <button type="submit" class="w-full pink-gradient text-white py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-md hover:opacity-95 transition" data-i18n="btn-save-serv">حفظ التغييرات في القائمة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Install Instructions Modal -->
+    <div id="install-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 card-shadow border border-pink-100 space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 class="text-base font-black text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen text-pink-600"></i> <span data-i18n="install-title">طريقة تثبيت التطبيق على هاتفك</span>
+                </h3>
+                <button onclick="closeModal('install-modal')" class="text-gray-400 hover:text-gray-600 w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3 text-xs sm:text-sm text-gray-600">
+                <div class="bg-pink-50/60 p-3.5 rounded-2xl border border-pink-100">
+                    <p class="font-bold text-pink-900 mb-1"><i class="fa-brands fa-apple text-base ml-1"></i> <span data-i18n="install-ios">لهواتف آيفون (iPhone - Safari):</span></p>
+                    <p class="leading-relaxed" data-i18n="install-ios-desc">1. افتح رابط هذه الصفحة في متصفح <b>Safari</b>.<br>2. اضغط على زر المشاركة (مربع السهم للأعلى).<br>3. اختر <b>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen)</b>.</p>
+                </div>
+                <div class="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-100">
+                    <p class="font-bold text-emerald-900 mb-1"><i class="fa-brands fa-android text-base ml-1"></i> <span data-i18n="install-android">لهواتف أندرويد (Android - Chrome):</span></p>
+                    <p class="leading-relaxed" data-i18n="install-android-desc">1. افتح رابط هذه الصفحة في متصفح <b>Google Chrome</b>.<br>2. اضغط على قائمة الخيارات (النقاط الثلاث بالأعلى).<br>3. اختر <b>"تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"</b>.</p>
+                </div>
+            </div>
+            <button onclick="closeModal('install-modal')" class="w-full pink-gradient text-white py-3 rounded-2xl font-bold text-xs shadow-md" data-i18n="btn-got-it">حسناً، فهمت</button>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            ar: {
+                "page-title": "صالون زينة النرجس - لوحة التحكم الشاملة",
+                "salon-title": "صالون زينة النرجس",
+                "btn-install": "تثبيت",
+                "online-sync": "أونلاين سحابي",
+                "home-welcome": "مرحباً بكِ في نظام إدارة صالون زينة النرجس 🌸",
+                "home-desc": "اختر القسم المطلوب من الأيقونات الكبيرة أدناه للتحكم بجميع أقسام الصالون والولاء والحجوزات بسلاسة تامة.",
+                "tab-customers": "الزبائن والولاء",
+                "tile-cust-desc": "بطاقات ولاء رقمية وأختام",
+                "tab-bookings": "الحجوزات والمواعيد",
+                "tile-book-desc": "تنبيهات وتذاكر واتساب",
+                "tab-accounts": "الحسابات والفواتير",
+                "tile-acc-desc": "مبيعات شهرية وفواتير",
+                "tab-services": "الأسعار والتخفيضات",
+                "tile-serv-desc": "قائمة الخدمات والخصومات",
+                "tab-scanner": "ماسح البطاقات",
+                "tile-scan-desc": "مسح QR للولاء الفوري",
+                "tab-stats": "التقارير والنشاط",
+                "tile-stats-desc": "إحصائيات وسجل الحركات",
+                "cust-header": "إدارة الزبائن وبطاقات الولاء الرقمية",
+                "cust-subheader": "كل 4 خدمات مدفوعة (تزيد قيمة الخدمة عن 5 ريال) تمنح الزبونة خدمة مجانية تلقائياً",
+                "search-placeholder": "ابحث باسم الزبون أو الهاتف...",
+                "btn-add-cust": "إضافة زبون",
+                "book-header": "جدولة الحجوزات والمواعيد والإنذارات",
+                "book-subheader": "تنبيهات ملونة ذكية للمواعيد (أخضر: 3-5 أيام، أصفر: يومين، أحمر: قبل يوم) مع إجمالي المبالغ المتوقعة",
+                "search-booking-placeholder": "ابحث باسم الزبونة في الحجوزات...",
+                "filter-date-label": "تصفية بالتاريخ:",
+                "btn-clear-filter": "إلغاء التصفية",
+                "btn-add-booking": "حجز موعد جديد",
+                "acc-header": "حسابات الزبائن والفواتير الشهرية والتاريخية",
+                "acc-subheader": "الزبائن مضافون تلقائياً أو يمكنك إضافة حسابات يدوية وحذفها والتعديل مباشرة",
+                "btn-add-account": "إضافة حساب يدوي",
+                "staff-perf-title": "تقرير أداء الموظفين وإجمالي المبيعات (هذا الشهر)",
+                "staff-perf-desc": "مجموع إيرادات وعدد خدمات كل موظفة في الصالون خلال الشهر الحالي بناءً على الحسابات المسجلة",
+                "report-month-label": "تقرير شهر:",
+                "th-customer": "الزبونة",
+                "th-phone": "رقم الهاتف",
+                "th-staff": "الموظفة المسؤولة",
+                "th-method": "طريقة الدفع",
+                "th-amount": "المبلغ المدفوع (ريال)",
+                "th-extra": "منتجات عناية إضافية وتكلفة",
+                "th-total": "الإجمالي",
+                "th-actions": "إجراءات",
+                "serv-header": "قائمة أسعار صالون زينة النرجس والتخفيضات",
+                "serv-subheader": "تعديل الأسعار وإضافة التخفيضات بكل سلاسة لتحديث الفاتورة والحجوزات فوراً",
+                "btn-add-service": "إضافة خدمة",
+                "discount-title": "تفعيل نسبة تخفيض عامة لجميع الخدمات",
+                "discount-desc": "حدد نسبة التخفيض وفترة سريانه ليتم تطبيق السعر الجديد على كافة الخدمات والحجوزات فوراً، أو قم بإلغائه في أي وقت",
+                "discount-rate-label": "نسبة الخصم:",
+                "discount-date-label": "إلى تاريخ:",
+                "btn-apply-discount": "تطبيق التخفيض",
+                "btn-cancel-discount": "إلغاء التخفيض",
+                "scanner-header": "ماسح بطاقات الولاء الإلكترونية",
+                "scanner-subheader": "قم بمَسح رمز الاستجابة السريع (QR Code) الخاص ببطاقة الزبونة لتسجيل نقطة أو صرف خدمة مجانية فوراً",
+                "btn-start-camera": "تشغيل الكاميرا",
+                "btn-stop-camera": "إيقاف الكاميرا",
+                "stat-cust": "إجمالي الزبائن المسجلين",
+                "stat-free": "الخدمات المجانية المصروفة",
+                "stat-book": "الحجوزات والمواعيد النشطة",
+                "logs-header": "سجل حركات ونشاطات الصالون",
+                "modal-cust-title": "إضافة زبونة جديدة للولاء",
+                "label-name": "اسم الزبونة",
+                "placeholder-cust-name": "مثال: فاطمة البلوشي",
+                "label-phone": "رقم الهاتف (سلطنة عمان)",
+                "label-staff-name": "اسم الموظفة المسؤولة",
+                "btn-save-cust": "حفظ وإصدار بطاقة الولاء الرقمية",
+                "modal-booking-title": "حجز موعد جديد في الصالون",
+                "label-whatsapp": "رقم الواتساب (سلطنة عمان)",
+                "label-select-services": "اختر الخدمات المطلوبة وحساب الإجمالي",
+                "label-date": "التاريخ",
+                "label-time": "الوقت",
+                "btn-confirm-booking": "تأكيد الحجز وإرسال التذكرة عبر الواتساب",
+                "modal-acc-title": "إضافة حساب زبونة يدوي للجدول",
+                "label-payment-method": "طريقة الدفع",
+                "opt-cash": "كاش",
+                "opt-transfer": "تحويل بنكي",
+                "label-amount": "المبلغ (ريال)",
+                "label-extra-products": "منتجات عناية إضافية وتكلفة",
+                "btn-save-acc": "إضافة السجل للجدول",
+                "card-badge": "بطاقة ولاء رقمية معتمدة",
+                "card-free-label": "الخدمات المجانية",
+                "card-progress": "تقدم رصيد البطاقة (كل 4 خدمات = خدمة مجانية):",
+                "qr-scan-title": "مسح البطاقة السريع",
+                "qr-scan-desc": "اعرض هذا الرمز لكاشير الصالون لتحديث الأختام فوراً.",
+                "btn-add-stamp": "تسجيل خدمة مدفوعة (+1)",
+                "btn-redeem": "صرف خدمة مجانية 🎁",
+                "btn-send-whatsapp": "إرسال تفاصيل بطاقة الولاء والكيو آر كود عبر الواتساب",
+                "modal-serv-title": "إضافة أو تعديل خدمة وسعر",
+                "label-serv-name": "اسم الخدمة",
+                "label-serv-price": "السعر أو تفاصيل التكلفة / التخفيض",
+                "btn-save-serv": "حفظ التغييرات في القائمة",
+                "install-title": "طريقة تثبيت التطبيق على هاتفك",
+                "install-ios": "لهواتف آيفون (iPhone - Safari):",
+                "install-ios-desc": "1. افتح رابط هذه الصفحة في متصفح <b>Safari</b>.<br>2. اضغط على زر المشاركة (مربع السهم للأعلى).<br>3. اختر <b>\"إضافة إلى الشاشة الرئيسية\" (Add to Home Screen)</b>.",
+                "install-android": "لهواتف أندرويد (Android - Chrome):",
+                "install-android-desc": "1. افتح رابط هذه الصفحة في متصفح <b>Google Chrome</b>.<br>2. اضغط على قائمة الخيارات (النقاط الثلاث بالأعلى).<br>3. اختر <b>\"تثبيت التطبيق\" أو \"إضافة إلى الشاشة الرئيسية\"</b>.",
+                "btn-got-it": "حسناً، فهمت"
+            },
+            en: {
+                "page-title": "Zinat Al-Narjis Salon - Comprehensive Dashboard",
+                "salon-title": "Zinat Al-Narjis Salon",
+                "btn-install": "Install",
+                "online-sync": "Cloud Online",
+                "home-welcome": "Welcome to Zinat Al-Narjis Salon Dashboard 🌸",
+                "home-desc": "Select the desired section from the large tiles below to seamlessly manage loyalty, bookings, accounts, and salon services.",
+                "tab-customers": "Customers & Loyalty",
+                "tile-cust-desc": "Digital loyalty cards & stamps",
+                "tab-bookings": "Bookings & Appointments",
+                "tile-book-desc": "Smart alerts & WhatsApp tickets",
+                "tab-accounts": "Accounts & Invoices",
+                "tile-acc-desc": "Monthly sales & billing records",
+                "tab-services": "Services & Pricing",
+                "tile-serv-desc": "Price lists & global discounts",
+                "tab-scanner": "Card QR Scanner",
+                "tile-scan-desc": "Instant loyalty card scanning",
+                "tab-stats": "Reports & Activity",
+                "tile-stats-desc": "Analytics & movement logs",
+                "cust-header": "Customers & Digital Loyalty Cards",
+                "cust-subheader": "Every 4 paid services (value > 5 RO) automatically grant 1 free service",
+                "search-placeholder": "Search by customer name or phone...",
+                "btn-add-cust": "Add Customer",
+                "book-header": "Bookings & Smart Appointment Alerts",
+                "book-subheader": "Smart color-coded appointment alerts (Green: 3-5 days, Yellow: 2 days, Red: 1 day) with expected totals",
+                "search-booking-placeholder": "Search booking by customer name...",
+                "filter-date-label": "Filter by Date:",
+                "btn-clear-filter": "Clear Filter",
+                "btn-add-booking": "New Booking",
+                "acc-header": "Customer Accounts, Monthly & Historical Invoices",
+                "acc-subheader": "Customers are added automatically or you can add manual accounts, delete and edit directly",
+                "btn-add-account": "Add Manual Account",
+                "staff-perf-title": "Staff Performance & Total Sales (This Month)",
+                "staff-perf-desc": "Total revenue and service count for each staff member this month based on recorded accounts",
+                "report-month-label": "Report Month:",
+                "th-customer": "Customer",
+                "th-phone": "Phone",
+                "th-staff": "Staff Member",
+                "th-method": "Payment",
+                "th-amount": "Paid Amount (RO)",
+                "th-extra": "Extra Care Products & Cost",
+                "th-total": "Total",
+                "th-actions": "Actions",
+                "serv-header": "Zinat Al-Narjis Salon Price List & Discounts",
+                "serv-subheader": "Easily edit prices and add discounts to update invoices and bookings instantly",
+                "btn-add-service": "Add Service",
+                "discount-title": "Apply General Discount Percentage to All Services",
+                "discount-desc": "Set the discount percentage and active period to apply new prices instantly across all services and bookings, or cancel anytime",
+                "discount-rate-label": "Discount %:",
+                "discount-date-label": "Valid Until:",
+                "btn-apply-discount": "Apply Discount",
+                "btn-cancel-discount": "Cancel Discount",
+                "scanner-header": "Digital Loyalty Card QR Scanner",
+                "scanner-subheader": "Scan the customer's QR code card to instantly record a stamp or redeem a free service",
+                "btn-start-camera": "Start Camera",
+                "btn-stop-camera": "Stop Camera",
+                "stat-cust": "Total Registered Customers",
+                "stat-free": "Free Services Redeemed",
+                "stat-book": "Active Bookings & Appointments",
+                "logs-header": "Salon Activity & Movement Logs",
+                "modal-cust-title": "Add New Loyalty Customer",
+                "label-name": "Customer Name",
+                "placeholder-cust-name": "e.g., Fatima Al-Balushi",
+                "label-phone": "Phone Number (Oman)",
+                "label-staff-name": "Responsible Staff",
+                "btn-save-cust": "Save & Issue Digital Loyalty Card",
+                "modal-booking-title": "New Salon Appointment Booking",
+                "label-whatsapp": "WhatsApp Number (Oman)",
+                "label-select-services": "Select Required Services & Calculate Total",
+                "label-date": "Date",
+                "label-time": "Time",
+                "btn-confirm-booking": "Confirm Booking & Send Ticket via WhatsApp",
+                "modal-acc-title": "Add Manual Customer Account",
+                "label-payment-method": "Payment Method",
+                "opt-cash": "Cash",
+                "opt-transfer": "Bank Transfer",
+                "label-amount": "Amount (RO)",
+                "label-extra-products": "Extra Care Products & Cost",
+                "btn-save-acc": "Add Record to Table",
+                "card-badge": "Certified Digital Loyalty Card",
+                "card-free-label": "Free Services",
+                "card-progress": "Loyalty Card Progress (Every 4 services = 1 free service):",
+                "qr-scan-title": "Quick Card Scan",
+                "qr-scan-desc": "Show this QR code to the salon cashier to instantly update stamps.",
+                "btn-add-stamp": "Record Paid Service (+1)",
+                "btn-redeem": "Redeem Free Service 🎁",
+                "btn-send-whatsapp": "Send Loyalty Card & QR Code Details to Customer via WhatsApp",
+                "modal-serv-title": "Add or Edit Service & Price",
+                "label-serv-name": "Service Name",
+                "label-serv-price": "Price or Cost / Discount Details",
+                "btn-save-serv": "Save Changes to List",
+                "install-title": "How to Install App on Your Phone",
+                "install-ios": "For iPhones (iPhone - Safari):",
+                "install-ios-desc": "1. Open this page link in <b>Safari</b>.<br>2. Tap the Share button (box with upward arrow).<br>3. Choose <b>\"Add to Home Screen\"</b>.",
+                "install-android": "For Android (Android - Chrome):",
+                "install-android-desc": "1. Open this page link in <b>Google Chrome</b>.<br>2. Tap the options menu (three dots at the top).<br>3. Choose <b>\"Install App\" or \"Add to Home Screen\"</b>.",
+                "btn-got-it": "Got it, Thanks"
+            }
+        };
+
+        let currentLang = 'ar';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            const root = document.getElementById('html-root');
+            const langLabel = document.getElementById('lang-label');
+            
+            if(currentLang === 'en') {
+                root.setAttribute('dir', 'ltr');
+                root.setAttribute('lang', 'en');
+                langLabel.innerText = 'العربية';
+            } else {
+                root.setAttribute('dir', 'rtl');
+                root.setAttribute('lang', 'ar');
+                langLabel.innerText = 'English';
+            }
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(translations[currentLang][key]) {
+                    el.innerText = translations[currentLang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if(translations[currentLang][key]) {
+                    el.setAttribute('placeholder', translations[currentLang][key]);
+                }
+            });
+
+            renderAll();
+        }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'zinate-aln-salon-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-key",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123:web:abc"
+        };
+
+        let db, auth;
+        let currentUser = null;
+
+        let customers = JSON.parse(localStorage.getItem('salon_customers') || 'null') || [
+            { id: 'CUST-101', name: 'سارة المعولي', phone: '+96872696405', stamps: 3, freeEarned: 0, totalPaidServices: 3 },
+            { id: 'CUST-102', name: 'مريم الكندي', phone: '+96872696405', stamps: 1, freeEarned: 1, totalPaidServices: 5 }
+        ];
+
+        let bookings = JSON.parse(localStorage.getItem('salon_bookings') || 'null') || [
+            { id: '1', name: 'سارة المعولي', phone: '+96872696405', service: 'هيدروفيشال', services: ['هيدروفيشال'], date: new Date().toISOString().split('T')[0], time: '10:00', status: 'مؤكد' }
+        ];
+
+        let accounts = JSON.parse(localStorage.getItem('salon_accounts') || 'null') || [
+            { id: 'ACC-101', customerName: 'سارة المعولي', phone: '+96872696405', staffName: 'مريم', paymentMethod: 'كاش', paidAmount: 25, extraProducts: 'كريم مرطب للبشرة (5 ريال)', extraProductsPrice: 5, date: new Date().toISOString().slice(0, 10) },
+            { id: 'ACC-102', customerName: 'مريم الكندي', phone: '+96872696405', staffName: 'عائشة', paymentMethod: 'تحويل بنكي', paidAmount: 20, extraProducts: 'سيروم فيتامين سي (10 ريال)', extraProductsPrice: 10, date: new Date().toISOString().slice(0, 10) }
+        ];
+
+        let services = JSON.parse(localStorage.getItem('salon_services') || 'null') || [
+            { id: 1, name: 'حف بالخيط', price: '3 ريال', basePrice: 3 },
+            { id: 2, name: 'حف بـ شمع خاص للوجه', price: '5 ريال', basePrice: 5 },
+            { id: 3, name: 'استشوار', price: 'من 5 إلى 15 ريال', basePrice: 10 },
+            { id: 4, name: 'صبغات الشعر', price: 'من 15 إلى 35 ريال', basePrice: 25 },
+            { id: 5, name: 'علاجا النانو', price: 'من 50 إلى 120 ريال', basePrice: 85 },
+            { id: 6, name: 'جلسة دينوكمس سبا للشعر', price: '12 ريال', basePrice: 12 },
+            { id: 7, name: 'جلسة دينوكمس سبا الشعر والوجه', price: '20 ريال', basePrice: 20 },
+            { id: 8, name: 'جلسة دينوكمس سبا للشعر والوجه و الرجل', price: '25 ريال', basePrice: 25 },
+            { id: 9, name: 'تشفير حواجب', price: '2 ريال', basePrice: 2 },
+            { id: 10, name: 'صبغة حواجب', price: '3 ريال', basePrice: 3 },
+            { id: 11, name: 'هيدروفيشال', price: '25 ريال', basePrice: 25 },
+            { id: 12, name: 'علاج المومياي', price: '30 ريال', basePrice: 30 },
+            { id: 13, name: 'فيشال نضاره', price: '10 ريال', basePrice: 10 },
+            { id: 14, name: 'درما بليينج', price: '5 ريال', basePrice: 5 },
+            { id: 15, name: 'يدكير و منكير', price: '10 ريال', basePrice: 10 },
+            { id: 16, name: 'جل اكستنشن', price: '12 ريال', basePrice: 12 },
+            { id: 17, name: 'تركيب العادي', price: '5 ريال', basePrice: 5 },
+            { id: 18, name: 'حلاوة نص رجلين', price: '4 ريال', basePrice: 4 },
+            { id: 19, name: 'حلاوة نص يدين', price: '3 ريال', basePrice: 3 },
+            { id: 20, name: 'حلاوة كامل الجسم', price: '20 ريال', basePrice: 20 }
+        ];
+
+        let logs = JSON.parse(localStorage.getItem('salon_logs') || 'null') || [];
+        let activeCustomerId = null;
+        let html5QrCode = null;
+        const SALON_WHATSAPP_URL = "https://wa.me/+96872696405";
+        const SALON_MAPS_URL = "https://maps.app.goo.gl/knFqQCGfwdFK5G9v9";
+
+        async function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                auth = firebase.auth();
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await auth.signInWithCustomToken(__initial_auth_token);
+                } else if (!auth.currentUser) {
+                    await auth.signInAnonymously();
+                }
+
+                currentUser = auth.currentUser;
+                setupRealtimeListeners();
+            } catch (e) {
+                console.error("Firebase init error (using local storage fallback):", e);
+                renderAll();
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!auth || !auth.currentUser) return;
+
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('customers')
+                .onSnapshot((snapshot) => {
+                    if(!snapshot.empty) {
+                        customers = [];
+                        snapshot.forEach((docSnap) => {
+                            customers.push({ id: docSnap.id, ...docSnap.data() });
+                        });
+                        localStorage.setItem('salon_customers', JSON.stringify(customers));
+                        syncAccountsWithCustomers();
+                        renderAll();
+                    }
+                }, (error) => { console.error("Customers sync error:", error); });
+
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('bookings')
+                .onSnapshot((snapshot) => {
+                    if(!snapshot.empty) {
+                        bookings = [];
+                        snapshot.forEach((docSnap) => {
+                            bookings.push({ id: docSnap.id, ...docSnap.data() });
+                        });
+                        localStorage.setItem('salon_bookings', JSON.stringify(bookings));
+                        renderAll();
+                    }
+                }, (error) => { console.error("Bookings sync error:", error); });
+
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('accounts')
+                .onSnapshot((snapshot) => {
+                    if(!snapshot.empty) {
+                        accounts = [];
+                        snapshot.forEach((docSnap) => {
+                            accounts.push({ id: docSnap.id, ...docSnap.data() });
+                        });
+                        localStorage.setItem('salon_accounts', JSON.stringify(accounts));
+                        renderAll();
+                    }
+                }, (error) => { console.error("Accounts sync error:", error); });
+        }
+
+        function syncAccountsWithCustomers() {
+            customers.forEach(cust => {
+                const existing = accounts.find(acc => acc.customerName === cust.name || acc.phone === cust.phone);
+                if(!existing) {
+                    const newAcc = {
+                        id: 'ACC-' + Date.now() + Math.floor(Math.random()*100),
+                        customerName: cust.name,
+                        phone: cust.phone,
+                        staffName: 'عام',
+                        paymentMethod: 'كاش',
+                        paidAmount: 0,
+                        extraProducts: '',
+                        extraProductsPrice: 0,
+                        date: new Date().toISOString().slice(0, 10)
+                    };
+                    accounts.push(newAcc);
+                }
+            });
+            localStorage.setItem('salon_accounts', JSON.stringify(accounts));
+        }
+
+        async function saveCustomerToCloud(customer) {
+            const index = customers.findIndex(c => c.id === customer.id);
+            if(index >= 0) customers[index] = customer;
+            else customers.unshift(customer);
+            localStorage.setItem('salon_customers', JSON.stringify(customers));
+            
+            syncAccountsWithCustomers();
+            renderAll();
+
+            try {
+                if (db && auth && auth.currentUser) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('customers').doc(String(customer.id)).set(customer);
+                }
+            } catch(err) { console.error("Cloud customer save warning:", err); }
+        }
+
+        async function deleteCustomerFromCloud(id) {
+            customers = customers.filter(c => c.id !== id);
+            localStorage.setItem('salon_customers', JSON.stringify(customers));
+            renderAll();
+
+            try {
+                if (db && auth && auth.currentUser) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('customers').doc(String(id)).delete();
+                }
+            } catch(err) { console.error("Cloud customer delete warning:", err); }
+        }
+
+        async function saveBookingToCloud(booking) {
+            bookings.unshift(booking);
+            localStorage.setItem('salon_bookings', JSON.stringify(bookings));
+            renderAll();
+
+            try {
+                if (db && auth && auth.currentUser) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('bookings').doc(String(booking.id)).set(booking);
+                }
+            } catch(err) { console.error("Cloud booking save warning:", err); }
+        }
+
+        async function deleteBookingFromCloud(id) {
+            bookings = bookings.filter(b => b.id !== id);
+            localStorage.setItem('salon_bookings', JSON.stringify(bookings));
+            renderAll();
+
+            try {
+                if (db && auth && auth.currentUser) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('bookings').doc(String(id)).delete();
+                }
+            } catch(err) { console.error("Cloud booking delete warning:", err); }
+        }
+
+        async function saveAccountToCloud(acc) {
+            const index = accounts.findIndex(a => a.id === acc.id);
+            if(index >= 0) accounts[index] = acc;
+            else accounts.unshift(acc);
+            localStorage.setItem('salon_accounts', JSON.stringify(accounts));
+            renderAll();
+
+            try {
+                if (db && auth && auth.currentUser) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('accounts').doc(String(acc.id)).set(acc);
+                }
+            } catch(err) { console.error("Cloud account save warning:", err); }
+        }
+
+        async function deleteAccountFromCloud(id) {
+            accounts = accounts.filter(a => a.id !== id);
+            localStorage.setItem('salon_accounts', JSON.stringify(accounts));
+            renderAll();
+
+            try {
+                if (db && auth && auth.currentUser) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('accounts').doc(String(id)).delete();
+                }
+            } catch(err) { console.error("Cloud account delete warning:", err); }
+        }
+
+        async function addLogToCloud(text) {
+            const logItem = { text, date: new Date().toLocaleString() };
+            logs.unshift(logItem);
+            if(logs.length > 50) logs.pop();
+            localStorage.setItem('salon_logs', JSON.stringify(logs));
+            renderAll();
+
+            try {
+                if (db && auth && auth.currentUser) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('logs').add(logItem);
+                }
+            } catch(err) { console.error("Cloud log warning:", err); }
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-message');
+            const icon = document.getElementById('toast-icon');
+            if(!toast || !msg) return;
+            msg.innerText = message;
+            icon.className = isError ? "fa-solid fa-circle-exclamation text-red-400 text-base" : "fa-solid fa-circle-check text-green-400 text-base";
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+
+        window.openInstallInstructions = function() {
+            document.getElementById('install-modal').classList.remove('hidden');
+        }
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            const targetTab = document.getElementById('tab-' + tabId);
+            if(targetTab) targetTab.classList.remove('hidden');
+
+            const backBtn = document.getElementById('home-back-btn');
+            if(tabId === 'home') {
+                if(backBtn) backBtn.classList.add('hidden');
+            } else {
+                if(backBtn) backBtn.classList.remove('hidden');
+            }
+
+            if(tabId !== 'scanner' && html5QrCode && html5QrCode.isScanning) {
+                stopScanner();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.goHome = function() {
+            switchTab('home');
+        }
+
+        function renderAll() {
+            syncAccountsWithCustomers();
+            renderCustomers();
+            renderBookings();
+            renderAccounts();
+            renderServices();
+            renderStats();
+            populateServiceCheckboxes();
+            checkUpcomingBookingsAlerts();
+        }
+
+        function checkUpcomingBookingsAlerts() {
+            const container = document.getElementById('booking-alerts-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const todayDate = new Date(todayStr);
+
+            let upcomingAlerts = [];
+
+            bookings.forEach(b => {
+                if(!b.date) return;
+                const bookingDate = new Date(b.date);
+                const diffTime = bookingDate - todayDate;
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                if(diffDays >= 0 && diffDays <= 5) {
+                    upcomingAlerts.push({ ...b, diffDays });
+                }
+            });
+
+            if(upcomingAlerts.length > 0) {
+                upcomingAlerts.forEach(alert => {
+                    let badgeColor = 'bg-emerald-500 text-white';
+                    let borderColor = 'border-emerald-300';
+                    let bgColor = 'bg-emerald-50';
+                    let textDesc = currentLang === 'ar' ? `متبقي على الموعد ${alert.diffDays} أيام` : `${alert.diffDays} days left for appointment`;
+
+                    if(alert.diffDays === 0) {
+                        badgeColor = 'bg-red-600 text-white animate-pulse';
+                        borderColor = 'border-red-400';
+                        bgColor = 'bg-red-50';
+                        textDesc = currentLang === 'ar' ? 'الموعد اليوم تماماً! 🚨' : 'Appointment is today! 🚨';
+                    } else if(alert.diffDays === 1) {
+                        badgeColor = 'bg-red-500 text-white';
+                        borderColor = 'border-red-300';
+                        bgColor = 'bg-red-50';
+                        textDesc = currentLang === 'ar' ? 'الموعد غداً! (قبل يوم واحد)' : 'Appointment is tomorrow!';
+                    } else if(alert.diffDays === 2) {
+                        badgeColor = 'bg-amber-500 text-white';
+                        borderColor = 'border-amber-300';
+                        bgColor = 'bg-amber-50';
+                        textDesc = currentLang === 'ar' ? 'متبقي يومان على الموعد' : '2 days left for appointment';
+                    } else if(alert.diffDays >= 3 && alert.diffDays <= 5) {
+                        badgeColor = 'bg-emerald-600 text-white';
+                        borderColor = 'border-emerald-300';
+                        bgColor = 'bg-emerald-50';
+                        textDesc = currentLang === 'ar' ? `متبقي ${alert.diffDays} أيام على الموعد` : `${alert.diffDays} days left for appointment`;
+                    }
+
+                    const servicesList = Array.isArray(alert.services) ? alert.services.join(', ') : (alert.service || 'Salon Service');
+                    
+                    container.innerHTML += `
+                        <div class="${bgColor} border-2 ${borderColor} p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-xl ${badgeColor} flex items-center justify-center font-bold text-xs shrink-0 shadow">
+                                    <i class="fa-solid fa-clock"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-black text-gray-900 text-xs">${currentLang === 'ar' ? 'موعد الزبونة:' : 'Appointment:'} ${alert.name}</h4>
+                                    <p class="text-[11px] text-gray-700 font-semibold mt-0.5">${currentLang === 'ar' ? 'التاريخ:' : 'Date:'} ${alert.date} (${textDesc})</p>
+                                    <p class="text-[10px] text-pink-700 font-bold mt-0.5">${currentLang === 'ar' ? 'الخدمات:' : 'Services:'} ${servicesList}</p>
+                                </div>
+                            </div>
+                            <a href="${SALON_WHATSAPP_URL}?text=${encodeURIComponent('مرحباً بكِ أستاذة ' + alert.name + ' 🌸 نذكركِ بموعدكِ القادم في صالون زينة النرجس بتاريخ ' + alert.date + ' الساعة ' + alert.time + ' لخدمات: ' + servicesList + '. نتشرف بزيارتكِ!\n\nلتقييم خدمتنا ومشاركة تجربتك معنا:\n' + SALON_MAPS_URL)}" target="_blank" class="bg-[#25D366] text-white px-3 py-2 rounded-xl text-[11px] font-bold shadow hover:opacity-90 transition flex items-center gap-1 shrink-0">
+                                <i class="fa-brands fa-whatsapp text-xs"></i> WhatsApp
+                            </a>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function extractPriceValue(priceStr) {
+            if(!priceStr) return 0;
+            const matches = String(priceStr).match(/\d+/g);
+            if(!matches || matches.length === 0) return 0;
+            return parseInt(matches[0], 10);
+        }
+
+        function populateServiceCheckboxes() {
+            const container = document.getElementById('booking-services-checkboxes');
+            if(!container) return;
+            container.innerHTML = '';
+            services.forEach(s => {
+                container.innerHTML += `
+                    <label class="flex items-center justify-between p-2 rounded-xl hover:bg-pink-100/40 cursor-pointer text-xs font-semibold text-gray-700 transition">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" name="booking-service-item" value="${s.name}" data-price="${s.price}" onchange="calculateBookingTotalPrice()" class="w-4 h-4 text-pink-600 rounded border-pink-300 focus:ring-pink-400">
+                            <span>${s.name}</span>
+                        </div>
+                        <span class="text-pink-700 bg-pink-100 px-2 py-0.5 rounded-lg text-[10px] font-bold">${s.price}</span>
+                    </label>
+                `;
+            });
+            calculateBookingTotalPrice();
+        }
+
+        window.calculateBookingTotalPrice = function() {
+            const checkboxes = document.querySelectorAll('input[name="booking-service-item"]:checked');
+            let total = 0;
+            checkboxes.forEach(cb => {
+                const priceText = cb.getAttribute('data-price');
+                total += extractPriceValue(priceText);
+            });
+            const totalBadge = document.getElementById('booking-total-price');
+            if(totalBadge) {
+                totalBadge.innerText = `${currentLang === 'ar' ? 'الإجمالي:' : 'Total:'} ${total} RO`;
+            }
+        }
+
+        window.applyGlobalDiscount = function() {
+            const percentInput = document.getElementById('global-discount-percent');
+            const percent = parseFloat(percentInput.value) || 0;
+
+            if(percent <= 0) {
+                cancelGlobalDiscount();
+                return;
+            }
+
+            services.forEach(s => {
+                if(!s.basePrice) s.basePrice = extractPriceValue(s.price) || 10;
+                const discounted = Math.round(s.basePrice * (1 - percent / 100));
+                s.price = currentLang === 'ar' ? `${discounted} ريال (خصم ${percent}%)` : `${discounted} RO (${percent}% OFF)`;
+            });
+
+            localStorage.setItem('salon_services', JSON.stringify(services));
+            renderServices();
+            populateServiceCheckboxes();
+            showToast(currentLang === 'ar' ? `تم تطبيق نسبة التخفيض (${percent}%) على جميع الخدمات بنجاح!` : `Discount of ${percent}% applied successfully!`);
+        }
+
+        window.cancelGlobalDiscount = function() {
+            services.forEach(s => {
+                if(s.basePrice) {
+                    s.price = currentLang === 'ar' ? `${s.basePrice} ريال` : `${s.basePrice} RO`;
+                }
+            });
+            const percentInput = document.getElementById('global-discount-percent');
+            if(percentInput) percentInput.value = 0;
+
+            const dateInput = document.getElementById('global-discount-date');
+            if(dateInput) dateInput.value = '';
+
+            localStorage.setItem('salon_services', JSON.stringify(services));
+            renderServices();
+            populateServiceCheckboxes();
+            showToast(currentLang === 'ar' ? 'تم إلغاء التخفيض واستعادة الأسعار الأصلية بنجاح!' : 'Discount canceled and original prices restored!');
+        }
+
+        function renderCustomers(filter = '') {
+            const grid = document.getElementById('customers-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+
+            const filtered = customers.filter(c => (c.name || '').toLowerCase().includes(filter.toLowerCase()) || (c.phone || '').includes(filter));
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs bg-white rounded-3xl border border-pink-100">${currentLang === 'ar' ? 'لا توجد نتائج مطابقة للبحث' : 'No matching results found'}</div>`;
+                return;
+            }
+
+            filtered.forEach(c => {
+                let stampsHtml = '';
+                for(let i=1; i<=4; i++) {
+                    if(i <= (c.stamps || 0)) {
+                        stampsHtml += `<div class="w-6 h-6 rounded-lg bg-pink-600 text-white flex items-center justify-center font-black text-[10px] shadow-sm"><i class="fa-solid fa-check"></i></div>`;
+                    } else {
+                        stampsHtml += `<div class="w-6 h-6 rounded-lg bg-pink-50 text-pink-300 flex items-center justify-center font-black text-[10px] border border-pink-100">${i}</div>`;
+                    }
+                }
+
+                grid.innerHTML += `
+                    <div class="bg-white p-4 rounded-3xl card-shadow border border-pink-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2.5">
+                                <div>
+                                    <h3 class="font-black text-gray-800 text-sm">${c.name}</h3>
+                                    <p class="text-[11px] text-gray-400 font-mono mt-0.5" dir="ltr">${c.phone}</p>
+                                </div>
+                                <button onclick="openCustomerCard('${c.id}')" class="pink-gradient text-white px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-sm hover:opacity-90 transition flex items-center gap-1">
+                                    <i class="fa-solid fa-qrcode"></i> ${currentLang === 'ar' ? 'البطاقة' : 'Card'}
+                                </button>
+                            </div>
+                            
+                            <div class="bg-pink-50/50 p-3 rounded-2xl border border-pink-100/60 mb-3">
+                                <p class="text-[11px] font-bold text-pink-900 mb-1.5 flex justify-between items-center">
+                                    <span>${currentLang === 'ar' ? 'ختم بطاقة الولاء:' : 'Loyalty Stamps:'}</span>
+                                    <span class="bg-pink-200/60 text-pink-800 px-2 py-0.5 rounded-lg text-[11px] font-black">${c.stamps || 0} / 4</span>
+                                </p>
+                                <div class="flex justify-between items-center gap-1">
+                                    ${stampsHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 text-[11px]">
+                            <span class="text-gray-500 font-medium">${currentLang === 'ar' ? 'الخدمات المجانية:' : 'Free Services:'} <strong class="text-pink-600 font-black">${c.freeEarned || 0}</strong></span>
+                            <div class="flex items-center gap-2.5">
+                                <a href="https://wa.me/+96872696405?text=${encodeURIComponent('مرحباً بكِ أستاذة ' + c.name + ' في صالون زينة النرجس 🌸\n\nنرجو تقييم خدمتك ومشاركة تجربتك معنا عبر الرابط:\n' + SALON_MAPS_URL)}" target="_blank" class="text-emerald-600 bg-emerald-50 p-1.5 rounded-xl"><i class="fa-brands fa-whatsapp text-sm"></i></a>
+                                <button onclick="deleteCustomer('${c.id}')" class="text-red-400 bg-red-50 p-1.5 rounded-xl"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderBookings(searchQuery = '', filterDate = '') {
+            const grid = document.getElementById('bookings-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+
+            let filtered = bookings.filter(b => {
+                const matchName = (b.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (b.phone || '').includes(searchQuery);
+                const matchDate = filterDate ? b.date === filterDate : true;
+                return matchName && matchDate;
+            });
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs bg-white rounded-3xl border border-pink-100">${currentLang === 'ar' ? 'لا توجد حجوزات مسجلة مطابقة للبحث' : 'No matching bookings found'}</div>`;
+                return;
+            }
+
+            filtered.forEach(b => {
+                const servicesList = Array.isArray(b.services) ? b.services.join(', ') : (b.service || 'Salon Service');
+                
+                let expectedTotal = 0;
+                if(Array.isArray(b.services)) {
+                    b.services.forEach(sName => {
+                        const foundServ = services.find(s => s.name === sName);
+                        if(foundServ) {
+                            expectedTotal += extractPriceValue(foundServ.price);
+                        }
+                    });
+                }
+
+                const waText = `مرحباً بكِ أستاذة ${b.name} 🌸\nنذكركِ بموعدكِ في صالون زينة النرجس:\n🔹 الخدمات: ${servicesList}\n💰 المبلغ المتوقع: ${expectedTotal} ريال\n📅 التاريخ: ${b.date}\n⏰ الوقت: ${b.time}\n\n📍 لتقييم ومتابعة موقع الصالون:\n${SALON_MAPS_URL}\n\nنتشرف بزيارتكِ!`;
+                
+                grid.innerHTML += `
+                    <div class="bg-white p-4 rounded-3xl card-shadow border border-pink-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-black text-gray-800 text-sm">${b.name}</h4>
+                                <span class="text-[10px] bg-pink-100 text-pink-700 px-2.5 py-0.5 rounded-lg font-bold">${b.status || 'مؤكد'}</span>
+                            </div>
+                            <p class="text-[11px] text-pink-700 font-bold mb-2 flex items-center gap-1 bg-pink-50/80 p-2 rounded-xl"><i class="fa-solid fa-scissors"></i>${servicesList}</p>
+                            <div class="bg-amber-50/60 p-2.5 rounded-xl text-[11px] font-bold text-amber-900 mb-2 border border-amber-200 flex justify-between items-center">
+                                <span>${currentLang === 'ar' ? 'المبلغ الإجمالي المتوقع:' : 'Expected Total:'}</span>
+                                <span class="text-pink-700 text-xs font-black">${expectedTotal} RO</span>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-2xl text-[11px] space-y-1 mb-3 text-gray-600 border border-gray-100">
+                                <p class="flex items-center gap-2"><i class="fa-regular fa-calendar text-pink-500 w-3"></i>${currentLang === 'ar' ? 'التاريخ:' : 'Date:'} <strong class="text-gray-800">${b.date}</strong></p>
+                                <p class="flex items-center gap-2"><i class="fa-regular fa-clock text-pink-500 w-3"></i>${currentLang === 'ar' ? 'الوقت:' : 'Time:'} <strong class="text-gray-800">${b.time}</strong></p>
+                                <p class="flex items-center gap-2"><i class="fa-solid fa-phone text-pink-500 w-3"></i>${currentLang === 'ar' ? 'الهاتف:' : 'Phone:'} <strong class="text-gray-800 font-mono" dir="ltr">${b.phone}</strong></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-2.5 border-t border-gray-100">
+                            <a href="${SALON_WHATSAPP_URL}?text=${encodeURIComponent(waText)}" target="_blank" class="bg-[#25D366] text-white px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-sm hover:opacity-90 transition flex items-center gap-1">
+                                <i class="fa-brands fa-whatsapp text-xs"></i> WhatsApp
+                            </a>
+                            <button onclick="deleteBooking('${b.id}')" class="text-red-400 text-[11px] bg-red-50 px-2.5 py-1.5 rounded-xl font-semibold"><i class="fa-solid fa-trash ml-1"></i>${currentLang === 'ar' ? 'حذف' : 'Delete'}</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.filterBookings = function() {
+            const query = document.getElementById('search-booking-input').value;
+            const dateVal = document.getElementById('filter-date-picker').value;
+            renderBookings(query, dateVal);
+        }
+
+        window.clearBookingFilter = function() {
+            document.getElementById('search-booking-input').value = '';
+            document.getElementById('filter-date-picker').value = '';
+            renderBookings();
+        }
+
+        function renderAccounts() {
+            const tableBody = document.getElementById('accounts-table-body');
+            if(!tableBody) return;
+            tableBody.innerHTML = '';
+
+            const picker = document.getElementById('report-month-picker');
+            if(!picker.value) {
+                picker.value = new Date().toISOString().slice(0, 7); // YYYY-MM
+            }
+            const selectedMonthStr = picker.value; // e.g. "2026-10"
+
+            const monthNamesArabic = {
+                "01": "يناير", "02": "فبراير", "03": "مارس", "04": "أبريل",
+                "05": "مايو", "06": "يونيو", "07": "يوليو", "08": "أغسطس",
+                "09": "سبتمبر", "10": "أكتوبر", "11": "نوفمبر", "12": "ديسمبر"
+            };
+            const monthNamesEnglish = {
+                "01": "January", "02": "February", "03": "March", "04": "April",
+                "05": "May", "06": "June", "07": "July", "08": "August",
+                "09": "September", "10": "October", "11": "November", "12": "December"
+            };
+            const [yearPart, monthPart] = selectedMonthStr.split('-');
+            const monthName = currentLang === 'ar' ? (monthNamesArabic[monthPart] || monthPart) : (monthNamesEnglish[monthPart] || monthPart);
+
+            let selectedMonthTotal = 0;
+            let currentMonthGlobalTotal = 0;
+            const currentRealMonthStr = new Date().toISOString().slice(0, 7);
+
+            // Calculate staff performance metrics for selected month
+            let staffStats = {};
+
+            if(accounts.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-400 text-xs">${currentLang === 'ar' ? 'لا توجد حسابات مسجلة حالياً' : 'No accounts recorded yet'}</td></tr>`;
+            }
+
+            accounts.forEach(acc => {
+                const accDate = acc.date || new Date().toISOString().slice(0, 10);
+                const accMonthStr = accDate.slice(0, 7);
+                const itemTotal = (parseFloat(acc.paidAmount) || 0) + (parseFloat(acc.extraProductsPrice) || 0);
+
+                if(accMonthStr === selectedMonthStr) {
+                    selectedMonthTotal += itemTotal;
+
+                    // Track staff stats for this month
+                    const staffName = acc.staffName && acc.staffName.trim() !== '' ? acc.staffName.trim() : (currentLang === 'ar' ? 'عام' : 'General');
+                    if(!staffStats[staffName]) {
+                        staffStats[staffName] = { totalSales: 0, count: 0 };
+                    }
+                    staffStats[staffName].totalSales += itemTotal;
+                    staffStats[staffName].count += 1;
+                }
+
+                if(accMonthStr === currentRealMonthStr) {
+                    currentMonthGlobalTotal += itemTotal;
+                }
+
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-pink-50/40 transition">
+                        <td class="p-3.5 font-bold text-gray-800">${acc.customerName}</td>
+                        <td class="p-3.5 font-mono text-gray-500" dir="ltr">${acc.phone}</td>
+                        <td class="p-3.5">
+                            <input type="text" id="staff-name-${acc.id}" value="${acc.staffName || ''}" onchange="updateAccountRecord('${acc.id}')" placeholder="اسم الموظفة" class="w-24 px-2 py-1.5 rounded-xl border border-indigo-200 bg-white font-bold text-indigo-700 text-xs focus:outline-none">
+                        </td>
+                        <td class="p-3.5">
+                            <select id="pay-method-${acc.id}" onchange="updateAccountRecord('${acc.id}')" class="px-2.5 py-1.5 rounded-xl border border-pink-200 bg-white font-semibold text-pink-700 text-xs focus:outline-none">
+                                <option value="كاش" ${acc.paymentMethod === 'كاش' ? 'selected' : ''}>${currentLang === 'ar' ? 'كاش' : 'Cash'}</option>
+                                <option value="تحويل بنكي" ${acc.paymentMethod === 'تحويل بنكي' ? 'selected' : ''}>${currentLang === 'ar' ? 'تحويل بنكي' : 'Bank Transfer'}</option>
+                            </select>
+                        </td>
+                        <td class="p-3.5">
+                            <input type="number" id="paid-amt-${acc.id}" value="${acc.paidAmount || 0}" onchange="updateAccountRecord('${acc.id}')" class="w-20 px-2.5 py-1.5 rounded-xl border border-pink-200 bg-white font-bold text-pink-700 text-xs focus:outline-none" placeholder="0"> RO
+                        </td>
+                        <td class="p-3.5">
+                            <div class="flex items-center gap-1.5">
+                                <input type="text" id="extra-prod-${acc.id}" value="${acc.extraProducts || ''}" onchange="updateAccountRecord('${acc.id}')" placeholder="Extra product" class="w-24 px-2 py-1.5 rounded-xl border border-pink-200 bg-white text-xs focus:outline-none">
+                                <input type="number" id="extra-price-${acc.id}" value="${acc.extraProductsPrice || 0}" onchange="updateAccountRecord('${acc.id}')" placeholder="Price" class="w-12 px-1.5 py-1.5 rounded-xl border border-pink-200 bg-white font-bold text-xs focus:outline-none"> RO
+                            </div>
+                        </td>
+                        <td class="p-3.5 text-center font-black text-pink-700 text-sm">
+                            ${itemTotal} RO
+                        </td>
+                        <td class="p-3.5 text-center flex items-center justify-center gap-1.5">
+                            <button onclick="sendWhatsAppInvoice('${acc.id}')" class="bg-[#25D366] text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold shadow hover:opacity-90 transition inline-flex items-center gap-1">
+                                <i class="fa-brands fa-whatsapp text-xs"></i>
+                            </button>
+                            <button onclick="deleteAccountRecord('${acc.id}')" class="bg-red-50 text-red-500 hover:bg-red-100 p-2 rounded-xl text-xs transition" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Render Staff Performance Summary
+            const staffContainer = document.getElementById('staff-performance-summary');
+            if(staffContainer) {
+                staffContainer.innerHTML = '';
+                const staffKeys = Object.keys(staffStats);
+                if(staffKeys.length === 0) {
+                    staffContainer.innerHTML = `<span class="text-xs text-indigo-200">${currentLang === 'ar' ? 'لا توجد بيانات مسجلة لهذا الشهر' : 'No staff data for this month'}</span>`;
+                } else {
+                    staffKeys.forEach(sName => {
+                        const sData = staffStats[sName];
+                        staffContainer.innerHTML += `
+                            <div class="bg-white/15 backdrop-blur border border-white/20 px-3.5 py-2 rounded-2xl text-xs">
+                                <span class="font-bold text-amber-200 block">${sName}</span>
+                                <span class="font-black text-white">${sData.totalSales} RO (${sData.count} ${currentLang === 'ar' ? 'خدمات/حركات' : 'services'})</span>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            const summaryEl = document.getElementById('monthly-total-summary');
+            if(summaryEl) {
+                summaryEl.innerText = `${currentLang === 'ar' ? 'إجمالي المبيعات هذا الشهر:' : 'Monthly Sales:'} ${currentMonthGlobalTotal} RO`;
+            }
+
+            const reportBadge = document.getElementById('selected-month-sales-badge');
+            if(reportBadge) {
+                reportBadge.innerText = currentLang === 'ar' ? `تقرير شهر ${monthName} ${yearPart}: إجمالي المبيعات ${selectedMonthTotal} ريال عماني` : `Report for ${monthName} ${yearPart}: Total Sales ${selectedMonthTotal} RO`;
+            }
+        }
+
+        window.openAddAccountModal = function() {
+            document.getElementById('account-modal').classList.remove('hidden');
+        }
+
+        window.handleSaveManualAccount = async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('acc-name').value;
+            const phone = document.getElementById('acc-phone').value;
+            const staffName = document.getElementById('acc-staff').value || 'عام';
+            const paymentMethod = document.getElementById('acc-method').value;
+            const paidAmount = parseFloat(document.getElementById('acc-amount').value) || 0;
+            const extraProducts = document.getElementById('acc-extra').value;
+
+            const newAcc = {
+                id: 'ACC-' + Date.now(),
+                customerName: name,
+                phone: phone,
+                staffName: staffName,
+                paymentMethod: paymentMethod,
+                paidAmount: paidAmount,
+                extraProducts: extraProducts,
+                extraProductsPrice: 0,
+                date: new Date().toISOString().slice(0, 10)
+            };
+
+            await saveAccountToCloud(newAcc);
+            await addLogToCloud(`إضافة حساب يدوي للزبونة: ${name} (الموظفة: ${staffName})`);
+            closeModal('account-modal');
+            e.target.reset();
+            showToast(currentLang === 'ar' ? 'تمت إضافة حساب الزبونة بنجاح!' : 'Customer account added successfully!');
+        }
+
+        window.updateAccountRecord = async function(accId) {
+            const acc = accounts.find(a => a.id === accId);
+            if(!acc) return;
+
+            const staffInput = document.getElementById(`staff-name-${accId}`);
+            const payMethodSelect = document.getElementById(`pay-method-${accId}`);
+            const paidAmtInput = document.getElementById(`paid-amt-${accId}`);
+            const extraProdInput = document.getElementById(`extra-prod-${accId}`);
+            const extraPriceInput = document.getElementById(`extra-price-${accId}`);
+
+            acc.staffName = staffInput.value || 'عام';
+            acc.paymentMethod = payMethodSelect.value;
+            acc.paidAmount = parseFloat(paidAmtInput.value) || 0;
+            acc.extraProducts = extraProdInput.value;
+            acc.extraProductsPrice = parseFloat(extraPriceInput.value) || 0;
+
+            await saveAccountToCloud(acc);
+            showToast(currentLang === 'ar' ? 'تم تحديث الفاتورة في الجدول بنجاح' : 'Invoice updated successfully');
+            renderAccounts();
+        }
+
+        window.deleteAccountRecord = async function(id) {
+            if(confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف هذا السجل من جدول الحسابات؟' : 'Are you sure you want to delete this account record?')) {
+                await deleteAccountFromCloud(id);
+                showToast(currentLang === 'ar' ? 'تم حذف سجل الحساب بنجاح' : 'Account record deleted successfully');
+            }
+        }
+
+        window.sendWhatsAppInvoice = function(accId) {
+            const acc = accounts.find(a => a.id === accId);
+            if(!acc) return;
+            const total = (parseFloat(acc.paidAmount) || 0) + (parseFloat(acc.extraProductsPrice) || 0);
+            const text = `مرحباً بكِ أستاذة ${acc.customerName} 🌸\nإليكِ تفاصيل فاتورتكِ من صالون زينة النرجس:\n\n🔹 طريقة الدفع: ${acc.paymentMethod}\n💰 المبلغ المدفوع للخدمات: ${acc.paidAmount} ريال\n🛍 منتجات العناية الإضافية: ${acc.extraProducts || 'لا توجد'} (${acc.extraProductsPrice || 0} ريال)\n\n📌 *إجمالي الفاتورة: ${total} ريال*\n\n🌟 نرجو تقييم خدمتك ومشاركة تجربتك معنا بتقييم ممتاز عبر الرابط:\n${SALON_MAPS_URL}\n\nشكراً لثقتكِ بنا وبانتظار زيارتكِ القادمة!`;
+            window.open(`https://wa.me/${acc.phone}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function renderServices() {
+            const grid = document.getElementById('services-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            services.forEach(s => {
+                grid.innerHTML += `
+                    <div class="bg-white p-3.5 rounded-2xl card-shadow border border-pink-100 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-xs mb-0.5">${s.name}</h4>
+                            <span class="text-[11px] font-bold text-pink-700 bg-pink-50 px-2.5 py-0.5 rounded-lg inline-block">${s.price}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="openEditServiceModal(${s.id})" class="text-pink-600 bg-pink-50 w-8 h-8 rounded-xl flex items-center justify-center transition" title="Edit"><i class="fa-solid fa-pen text-[11px]"></i></button>
+                            <button onclick="deleteService(${s.id})" class="text-red-400 bg-red-50 w-8 h-8 rounded-xl flex items-center justify-center transition" title="Delete"><i class="fa-solid fa-trash text-[11px]"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderStats() {
+            const statCust = document.getElementById('stat-total-customers');
+            if(statCust) statCust.innerText = customers.length;
+            
+            const totalFree = customers.reduce((acc, curr) => acc + (curr.freeEarned || 0), 0);
+            const statFree = document.getElementById('stat-free-services');
+            if(statFree) statFree.innerText = totalFree;
+            
+            const statBook = document.getElementById('stat-total-bookings');
+            if(statBook) statBook.innerText = bookings.length;
+
+            const logsContainer = document.getElementById('logs-list');
+            if(!logsContainer) return;
+            logsContainer.innerHTML = '';
+            logs.slice(-10).reverse().forEach(log => {
+                logsContainer.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl text-[11px] border border-gray-100">
+                        <span class="text-gray-700 font-medium flex items-center gap-1.5"><i class="fa-solid fa-circle-dot text-pink-500 text-[6px]"></i>${log.text}</span>
+                        <span class="text-gray-400 font-mono">${log.date}</span>
+                    </div>
+                `;
+            });
+        }
+
+        window.openAddCustomerModal = function() { document.getElementById('customer-modal').classList.remove('hidden'); }
+        window.openAddBookingModal = function() { document.getElementById('booking-modal').classList.remove('hidden'); }
+        
+        window.openAddServiceModal = function() {
+            document.getElementById('service-modal-title').innerText = currentLang === 'ar' ? 'إضافة خدمة جديدة' : 'Add New Service';
+            document.getElementById('serv-id').value = '';
+            document.getElementById('serv-name').value = '';
+            document.getElementById('serv-price').value = '';
+            document.getElementById('service-modal').classList.remove('hidden');
+        }
+
+        window.openEditServiceModal = function(id) {
+            const serv = services.find(s => s.id === id);
+            if(!serv) return;
+            document.getElementById('service-modal-title').innerText = currentLang === 'ar' ? 'تعديل السعر أو إضافة تخفيض' : 'Edit Price or Add Discount';
+            document.getElementById('serv-id').value = serv.id;
+            document.getElementById('serv-name').value = serv.name;
+            document.getElementById('serv-price').value = serv.price;
+            document.getElementById('service-modal').classList.remove('hidden');
+        }
+
+        window.closeModal = function(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+
+        window.handleSaveCustomer = async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('cust-name').value;
+            const rawPhone = document.getElementById('cust-phone').value.trim();
+            const phone = '+968' + rawPhone;
+            const newCust = { id: 'CUST-' + Date.now().toString().slice(-6), name, phone, stamps: 0, freeEarned: 0, totalPaidServices: 0 };
+            
+            await saveCustomerToCloud(newCust);
+            await addLogToCloud(`تسجيل زبونة جديدة: ${name}`);
+            closeModal('customer-modal');
+            e.target.reset();
+            showToast(currentLang === 'ar' ? 'تمت إضافة الزبونة وإصدار بطاقة الولاء بنجاح!' : 'Customer added & loyalty card issued successfully!');
+        }
+
+        window.handleSaveBooking = async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('book-name').value;
+            const rawPhone = document.getElementById('book-phone').value.trim();
+            const phone = '+968' + rawPhone;
+            const date = document.getElementById('book-date').value;
+            const time = document.getElementById('book-time').value;
+
+            const checkedServices = Array.from(document.querySelectorAll('input[name="booking-service-item"]:checked')).map(cb => cb.value);
+            if(checkedServices.length === 0) {
+                showToast(currentLang === 'ar' ? 'يرجى اختيار خدمة واحدة على الأقل' : 'Please select at least one service', true);
+                return;
+            }
+
+            const newBooking = { id: String(Date.now()), name, phone, services: checkedServices, service: checkedServices.join(', '), date, time, status: 'مؤكد' };
+            await saveBookingToCloud(newBooking);
+            await addLogToCloud(`حجز موعد للزبونة ${name} (${checkedServices.join(', ')})`);
+            closeModal('booking-modal');
+            e.target.reset();
+            populateServiceCheckboxes();
+            showToast(currentLang === 'ar' ? 'تم حجز الموعد بنجاح!' : 'Appointment booked successfully!');
+        }
+
+        window.handleSaveService = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('serv-id').value;
+            const name = document.getElementById('serv-name').value;
+            const price = document.getElementById('serv-price').value;
+
+            if(id) {
+                const serv = services.find(s => s.id == id);
+                if(serv) {
+                    serv.name = name;
+                    serv.price = price;
+                    serv.basePrice = extractPriceValue(price) || serv.basePrice;
+                }
+            } else {
+                services.push({ id: Date.now(), name, price, basePrice: extractPriceValue(price) || 10 });
+            }
+
+            localStorage.setItem('salon_services', JSON.stringify(services));
+            closeModal('service-modal');
+            e.target.reset();
+            renderServices();
+            populateServiceCheckboxes();
+            showToast(currentLang === 'ar' ? 'تم حفظ تحديث السعر والخدمة بنجاح!' : 'Service updated successfully!');
+        }
+
+        window.deleteCustomer = async function(id) {
+            if(confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف هذه الزبونة؟' : 'Are you sure you want to delete this customer?')) {
+                await deleteCustomerFromCloud(id);
+                await addLogToCloud(`حذف زبونة من النظام`);
+                showToast(currentLang === 'ar' ? 'تم الحذف بنجاح' : 'Deleted successfully');
+            }
+        }
+
+        window.deleteBooking = async function(id) {
+            await deleteBookingFromCloud(id);
+            await addLogToCloud(`حذف موعد من النظام`);
+            showToast(currentLang === 'ar' ? 'تم حذف الموعد بنجاح' : 'Booking deleted successfully');
+        }
+
+        window.deleteService = function(id) {
+            services = services.filter(s => s.id !== id);
+            localStorage.setItem('salon_services', JSON.stringify(services));
+            renderServices();
+            populateServiceCheckboxes();
+            showToast(currentLang === 'ar' ? 'تم حذف الخدمة بنجاح' : 'Service deleted successfully');
+        }
+
+        window.openCustomerCard = function(id) {
+            activeCustomerId = id;
+            const customer = customers.find(c => c.id === id);
+            if(!customer) return;
+
+            document.getElementById('modal-cust-name').innerText = customer.name;
+            document.getElementById('modal-cust-phone').innerText = customer.phone;
+            document.getElementById('modal-cust-free-badge').innerText = (customer.freeEarned || 0) + (currentLang === 'ar' ? ' هدية' : ' Gift');
+            document.getElementById('modal-stamps-text').innerText = (customer.stamps || 0) + ' / 4';
+
+            const stampsContainer = document.getElementById('modal-stamps-container');
+            stampsContainer.innerHTML = '';
+            for(let i=1; i<=4; i++) {
+                if(i <= (customer.stamps || 0)) {
+                    stampsContainer.innerHTML += `
+                        <div class="bg-white/20 backdrop-blur-md rounded-xl p-2 text-center border border-white/30 shadow-inner flex flex-col items-center justify-center">
+                            <span class="w-7 h-7 rounded-lg bg-amber-400 text-rose-950 font-black text-xs flex items-center justify-center shadow"><i class="fa-solid fa-star"></i></span>
+                            <span class="text-[9px] text-white font-bold mt-1">${currentLang === 'ar' ? 'ختم' : 'Stamp'} ${i}</span>
+                        </div>
+                    `;
+                } else {
+                    stampsContainer.innerHTML += `
+                        <div class="bg-black/10 backdrop-blur-sm rounded-xl p-2 text-center border border-white/5 flex flex-col items-center justify-center opacity-70">
+                            <span class="w-7 h-7 rounded-lg bg-white/10 text-pink-200 font-bold text-xs flex items-center justify-center">${i}</span>
+                            <span class="text-[9px] text-pink-200 font-semibold mt-1">${currentLang === 'ar' ? 'فارغ' : 'Empty'}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            const redeemBtn = document.getElementById('redeem-btn');
+            if((customer.stamps || 0) >= 4) {
+                redeemBtn.removeAttribute('disabled');
+                redeemBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                redeemBtn.setAttribute('disabled', 'true');
+                redeemBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            try {
+                const qr = qrcode(0, 'M');
+                qr.addData(customer.id);
+                qr.make();
+                qrContainer.innerHTML = qr.createSvgTag({cellSize: 4, margin: 1});
+            } catch(e) {
+                qrContainer.innerText = customer.id;
+            }
+
+            document.getElementById('card-modal').classList.remove('hidden');
+        }
+
+        window.addPaidServiceToCurrent = async function() {
+            const customer = customers.find(c => c.id === activeCustomerId);
+            if(!customer) return;
+
+            customer.stamps = (customer.stamps || 0) + 1;
+            customer.totalPaidServices = (customer.totalPaidServices || 0) + 1;
+
+            await saveCustomerToCloud(customer);
+            await addLogToCloud(`تسجيل خدمة مدفوعة (+1) للزبونة: ${customer.name}`);
+
+            if(customer.stamps >= 4) {
+                showToast(currentLang === 'ar' ? '🎉 مبروك! اكتملت بطاقة الولاء وأصبح بإمكانها الحصول على خدمة مجانية!' : '🎉 Congratulations! Loyalty card completed!');
+            } else {
+                showToast(currentLang === 'ar' ? `تمت إضافة خدمة مدفوعة. رصيد الولاء: ${customer.stamps}/4` : `Stamp added. Loyalty: ${customer.stamps}/4`);
+            }
+
+            openCustomerCard(customer.id);
+        }
+
+        window.redeemFreeServiceToCurrent = async function() {
+            const customer = customers.find(c => c.id === activeCustomerId);
+            if(!customer || (customer.stamps || 0) < 4) return;
+
+            customer.stamps -= 4;
+            customer.freeEarned = (customer.freeEarned || 0) + 1;
+
+            await saveCustomerToCloud(customer);
+            await addLogToCloud(`صرف خدمة مجانية 🎁 للزبونة: ${customer.name}`);
+
+            showToast(currentLang === 'ar' ? `🎁 تم صرف الخدمة المجانية بنجاح للزبونة ${customer.name}!` : `🎁 Free service redeemed successfully!`);
+            openCustomerCard(customer.id);
+        }
+
+        window.sendWhatsAppCardMessage = function() {
+            const customer = customers.find(c => c.id === activeCustomerId);
+            if(!customer) return;
+
+            const text = `مرحباً بكِ أستاذة ${customer.name} 🌸\nيسعدنا تواصلكِ مع صالون زينة النرجس.\n\n📱 تفاصيل بطاقة الولاء الرقمية الخاصة بكِ:\n🔖 معرف البطاقة: ${customer.id}\n🔹 عدد الخدمات المدفوعة (الأختام): ${customer.stamps || 0} / 4\n🎁 الخدمات المجانية المستفادة: ${customer.freeEarned || 0}\n\n📌 ملاحظة: يتم ختم البطاقة في حالة كانت قيمة الخدمة أكثر من 5 ريالات عماني.\n\n📲 يمكنكِ إبراز كود البطاقة (${customer.id}) لدى كاشير الصالون لتسجيل أختامك فوراً!\n\n🌟 نسعد جداً برأيك وتقييمك لخدماتنا بتقييم ممتاز عبر الرابط:\n${SALON_MAPS_URL}\n\nللتواصل وحجز المواعيد: https://wa.me/+96872696405\nنتشرف بزيارتكِ دائماً في صالون زينة النرجس ✨`;
+            window.open(`https://wa.me/${customer.phone}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        window.startScanner = function() {
+            const readerElement = document.getElementById("reader");
+            readerElement.innerHTML = "";
+            
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 180, height: 180 } };
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText) => {
+                    const found = customers.find(c => c.id === decodedText);
+                    if(found) {
+                        stopScanner();
+                        openCustomerCard(found.id);
+                        showToast(`${currentLang === 'ar' ? 'تم التعرف على الزبونة:' : 'Customer found:'} ${found.name}`);
+                    } else {
+                        showToast(currentLang === 'ar' ? 'رمز QR غير صالح أو زبون غير مسجل في النظام' : 'Invalid QR code', true);
+                    }
+                },
+                (errorMessage) => {}
+            ).catch((err) => {
+                console.error("Camera start error (switching to user camera):", err);
+                html5QrCode.start(
+                    { facingMode: "user" },
+                    config,
+                    (decodedTest) => {
+                        const found = customers.find(c => c.id === decodedTest);
+                        if(found) {
+                            stopScanner();
+                            openCustomerCard(found.id);
+                            showToast(`${currentLang === 'ar' ? 'تم التعرف على الزبونة:' : 'Customer found:'} ${found.name}`);
+                        }
+                    },
+                    () => {}
+                ).catch(e => {
+                    showToast(currentLang === 'ar' ? 'تعذر تشغيل الكاميرا، يرجى السماح بأذونات الكاميرا في المتصفح' : 'Camera permission error', true);
+                });
+            });
+        }
+
+        window.stopScanner = function() {
+            if(html5QrCode) {
+                if(html5QrCode.isScanning) {
+                    html5QrCode.stop().then(() => html5QrCode.clear()).catch(err => console.error(err));
+                } else {
+                    try { html5QrCode.clear(); } catch(e){}
+                }
+            }
+        }
+
+        window.onload = function() {
+            initFirebase();
+            renderAll();
+        }
+    </script>
+</body>
+</html>
